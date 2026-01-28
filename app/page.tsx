@@ -27,10 +27,19 @@ function ResetPasswordContent() {
   const mode = searchParams.get('mode');
 
   useEffect(() => {
+    // Log all incoming parameters for debugging
+    const params: Record<string, string> = {};
+    searchParams.forEach((value, key) => {
+      params[key] = value;
+    });
+    console.log("Full Search Params:", params);
+    console.log("Current Full URL:", window.location.href);
+
+    // If no code is present, show error immediately
     if (!oobCode || !mode) {
-      console.error("Missing oobCode or mode", { oobCode, mode });
+      console.error("Missing oobCode or mode. Params received:", params);
       setStatus('error');
-      setErrorMessage('Invalid link: Missing reset code or mode.');
+      setErrorMessage('Invalid link: Missing reset code (oobCode) or mode parameter.');
       return;
     }
 
@@ -50,7 +59,7 @@ function ResetPasswordContent() {
         setEmail(verifiedEmail);
         setStatus('idle');
       })
-      .catch((error: unknown) => {
+      .catch((error: any) => {
         console.error("Error verifying code:", error);
         setStatus('error');
         // Firebase Auth Error Codes handling
@@ -67,7 +76,7 @@ function ResetPasswordContent() {
           setErrorMessage(error.message || 'Invalid or expired action code.');
         }
       });
-  }, [oobCode, mode]);
+  }, [oobCode, mode, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent, newPassword: string, confirmPassword: string) => {
     e.preventDefault();
