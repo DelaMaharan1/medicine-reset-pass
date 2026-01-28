@@ -59,21 +59,22 @@ function ResetPasswordContent() {
         setEmail(verifiedEmail);
         setStatus('idle');
       })
-      .catch((error: any) => {
-        console.error("Error verifying code:", error);
+      .catch((error: unknown) => {
+        const err = error as { code?: string; message?: string };
+        console.error("Error verifying code:", err);
         setStatus('error');
         // Firebase Auth Error Codes handling
         // https://firebase.google.com/docs/reference/js/auth#autherrorcodes
-        if (error.code === 'auth/expired-action-code') {
+        if (err.code === 'auth/expired-action-code') {
           setErrorMessage('The password reset link has expired. Please request a new one.');
-        } else if (error.code === 'auth/invalid-action-code') {
+        } else if (err.code === 'auth/invalid-action-code') {
           setErrorMessage('The password reset link is invalid. It may have been used already.');
-        } else if (error.code === 'auth/user-disabled') {
+        } else if (err.code === 'auth/user-disabled') {
           setErrorMessage('The user corresponding to this reset link has been disabled.');
-        } else if (error.code === 'auth/user-not-found') {
+        } else if (err.code === 'auth/user-not-found') {
           setErrorMessage('User not found.');
         } else {
-          setErrorMessage(error.message || 'Invalid or expired action code.');
+          setErrorMessage(err.message || 'Invalid or expired action code.');
         }
       });
   }, [oobCode, mode, searchParams]);
@@ -91,17 +92,18 @@ function ResetPasswordContent() {
     try {
       await confirmPasswordReset(auth, oobCode, newPassword);
       setStatus('success');
-    } catch (error: any) {
-      console.error("Error confirming reset:", error);
+    } catch (error: unknown) {
+      const err = error as { code?: string; message?: string };
+      console.error("Error confirming reset:", err);
       setStatus('error');
-      if (error.code === 'auth/expired-action-code') {
+      if (err.code === 'auth/expired-action-code') {
         setErrorMessage('The password reset link has expired. Please request a new one.');
-      } else if (error.code === 'auth/invalid-action-code') {
+      } else if (err.code === 'auth/invalid-action-code') {
         setErrorMessage('The password reset link is invalid. It may have been used already.');
-      } else if (error.code === 'auth/weak-password') {
+      } else if (err.code === 'auth/weak-password') {
         setErrorMessage('The password is too weak.');
       } else {
-        setErrorMessage(error.message || 'An unknown error occurred.');
+        setErrorMessage(err.message || 'An unknown error occurred.');
       }
     } finally {
       setIsLoading(false);
