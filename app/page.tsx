@@ -10,7 +10,7 @@ import React, { useEffect, useState } from 'react'
 
 export default function ResetPasswordPage() {
   return (
-    <React.Suspense fallback={<LoadingSpinner />}> 
+    <React.Suspense fallback={<LoadingSpinner />}>
       <ResetPasswordContent />
     </React.Suspense>
   );
@@ -24,28 +24,50 @@ function ResetPasswordContent() {
 
   const searchParams = useSearchParams();
   const oobCode = searchParams.get('oobCode');
+  const mode = searchParams.get('mode');
 
   useEffect(() => {
-    if (!oobCode) {
+    if (!oobCode || !mode) {
+      console.error("Missing oobCode or mode", { oobCode, mode });
       setStatus('error');
-      setErrorMessage('Invalid or missing reset code.');
+      setErrorMessage('Invalid link: Missing reset code or mode.');
       return;
     }
 
+    // Identify what mode we are in
+    if (mode !== 'resetPassword') {
+      console.error("Invalid mode:", mode);
+      setStatus('error');
+      setErrorMessage(`Invalid operation mode: ${mode}. Expected 'resetPassword'.`);
+      return;
+    }
+
+    console.log("Verifying code:", oobCode, "Mode:", mode);
+
     verifyPasswordResetCode(auth, oobCode)
       .then((verifiedEmail: string) => {
+        console.log("Email verified:", verifiedEmail);
         setEmail(verifiedEmail);
         setStatus('idle');
       })
       .catch((error: unknown) => {
+        console.error("Error verifying code:", error);
         setStatus('error');
-        if (error instanceof Error) {
-          setErrorMessage(error.message || 'Invalid or expired action code.');
+        // Firebase Auth Error Codes handling
+        // https://firebase.google.com/docs/reference/js/auth#autherrorcodes
+        if (error.code === 'auth/expired-action-code') {
+          setErrorMessage('The password reset link has expired. Please request a new one.');
+        } else if (error.code === 'auth/invalid-action-code') {
+          setErrorMessage('The password reset link is invalid. It may have been used already.');
+        } else if (error.code === 'auth/user-disabled') {
+          setErrorMessage('The user corresponding to this reset link has been disabled.');
+        } else if (error.code === 'auth/user-not-found') {
+          setErrorMessage('User not found.');
         } else {
-          setErrorMessage('Invalid or expired action code.');
+          setErrorMessage(error.message || 'Invalid or expired action code.');
         }
       });
-  }, [oobCode]);
+  }, [oobCode, mode]);
 
   const handleSubmit = async (e: React.FormEvent, newPassword: string, confirmPassword: string) => {
     e.preventDefault();
@@ -60,12 +82,17 @@ function ResetPasswordContent() {
     try {
       await confirmPasswordReset(auth, oobCode, newPassword);
       setStatus('success');
-    } catch (error: unknown) {
+    } catch (error: any) {
+      console.error("Error confirming reset:", error);
       setStatus('error');
-      if (error instanceof Error) {
-        setErrorMessage(error.message);
+      if (error.code === 'auth/expired-action-code') {
+        setErrorMessage('The password reset link has expired. Please request a new one.');
+      } else if (error.code === 'auth/invalid-action-code') {
+        setErrorMessage('The password reset link is invalid. It may have been used already.');
+      } else if (error.code === 'auth/weak-password') {
+        setErrorMessage('The password is too weak.');
       } else {
-        setErrorMessage('An unknown error occurred.');
+        setErrorMessage(error.message || 'An unknown error occurred.');
       }
     } finally {
       setIsLoading(false);
