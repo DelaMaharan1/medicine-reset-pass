@@ -1,6 +1,6 @@
 import Image from 'next/image';
-import React from 'react'
-
+import React from 'react';
+import { FiEye, FiEyeOff, FiLock } from 'react-icons/fi';
 
 interface ResetPasswordFormProps {
     email: string;
@@ -13,10 +13,20 @@ interface ResetPasswordFormProps {
 export default function ResetPasswordForm({ email, onSubmit, isLoading, errorMessage, isError }: ResetPasswordFormProps) {
     const [newPassword, setNewPassword] = React.useState('');
     const [confirmPassword, setConfirmPassword] = React.useState('');
-
+    const [showPassword, setShowPassword] = React.useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+    
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSubmit(e, newPassword, confirmPassword);
+    };
+
+    const toggleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+    const toggleShowConfirmPassword = () => {
+        setShowConfirmPassword(!showConfirmPassword);
     };
 
     return (
@@ -61,34 +71,60 @@ export default function ResetPasswordForm({ email, onSubmit, isLoading, errorMes
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     New Password
                                 </label>
-                                <input
-                                    type="password"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary dark:text-white"
-                                    required
-                                    minLength={6}
-                                />
+                                <div className="relative">
+                                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                                        <FiLock className="text-gray-400 dark:text-gray-500" />
+                                    </div>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] px-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary dark:text-white"
+                                        required
+                                        minLength={6}
+                                        placeholder="Enter new password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={toggleShowPassword}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                                    >
+                                        {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                                    </button>
+                                </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                     Confirm Password
                                 </label>
-                                <input
-                                    type="password"
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary dark:text-white"
-                                    required
-                                    minLength={6}
-                                />
+                                <div className="relative">
+                                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                                        <FiLock className="text-gray-400 dark:text-gray-500" />
+                                    </div>
+                                    <input
+                                        type={showConfirmPassword ? "text" : "password"}
+                                        value={confirmPassword}
+                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a1a1a] px-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary dark:text-white"
+                                        required
+                                        minLength={6}
+                                        placeholder="Confirm new password"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={toggleShowConfirmPassword}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                                    >
+                                        {showConfirmPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                                    </button>
+                                </div>
                             </div>
 
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full mt-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white hover:opacity-90 transition flex justify-center shadow-lg shadow-primary/25"
+                                className="w-full mt-2 rounded-lg bg-primary py-3 text-sm font-semibold text-white hover:opacity-90 transition flex justify-center shadow-lg shadow-primary/25 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? (
                                     <span className="animate-pulse">Processing...</span>
